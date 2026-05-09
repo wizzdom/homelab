@@ -1,0 +1,46 @@
+nomad:
+  vars:
+    ansible_user: dom
+    ansible_ssh_pass: CHANGEME
+    ansible_become_password: CHANGEME
+    nomad_datacenter_name: dc1
+    nomad_server_bootstrap_expect: 3
+    consul_generated_encrypt_key: CHANGEME # consul keygen
+  hosts:
+    morpheus:
+      ansible_host: morpheus.lan
+      server: true
+      client: true
+    trinity:
+      ansible_host: trinity.lan
+      server: true
+      client: true
+    smith:
+      ansible_host: smith.lan
+      server: true
+      client: true
+    # neo:
+    #   ansible_host: neo.lan
+    #   client: true
+    # oracle:
+    #   ansible_host: oracle.lan
+    #   client: true
+
+rpis:
+  hosts:
+    raspberrypi:
+      ansible_host: raspberrypi.lan
+      ansible_user: pi
+
+truenas:
+  hosts:
+    truenas:
+      ansible_host: truenas.lan
+      ansible_user: truenas_admin
+
+all:
+  vars:
+    packages:
+      - htop
+      - vim
+      - jq
