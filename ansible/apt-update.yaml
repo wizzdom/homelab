@@ -1,0 +1,91 @@
+# Ansible playbook to update and upgrade apt packages on a Debian based system
+# This playbook is intended to be run on a regular basis to keep the system up to date
+# It can also be used to check for, and upgrade to, new versions of Hashicorp products
+# (nomad, consul, vault). The playbook does nothing by default, you need to set the
+# variables to enable the different features.
+
+# Examples
+# Check for updates to Hashicorp products
+# ansible-playbook -i inventory update.yml -e "check_hashicorp=true"
+
+# Update Hashicorp products
+# ansible-playbook -i inventory update.yml -e "update_hashicorp=true upgrade=true"
+
+# Update all packages (except hashicorp products)
+# ansible-playbook -i inventory update.yml -e "upgrade=true"
+
+# Install packages
+# ansible-playbook -i inventory update.yml -e "packages='vim, htop'"
+---
+- name: Apt update and upgrade
+  hosts: all
+  gather_facts: false
+  serial: "{{ max_parallel }}"
+
+  vars:
+    update_hashicorp: false
+    check_hashicorp: false
+    upgrade: false
+    max_parallel: "{{ 1 if update_hashicorp | bool else '60%' }}"
+    package_list: "{{ packages | default([]) }}"
+
+  tasks:
+    - name: Mark Hashicorp products as held back
+      become: true
+      shell: "apt-mark hold nomad consul vault"
+      when:
+        - not update_hashicorp | bool
+        - upgrade | bool
+        - inventory_hostname in groups['nomad']
+
+    - name: Apt update and apt upgrade
+      become: true
+      apt:
+        upgrade: yes
+        autoclean: yes
+        autoremove: yes
+        update_cache: yes
+      when: upgrade | bool
+
+    - name: Get installed and updated packages
+      become: true
+      shell: 'grep -E "^$(date +%Y-%m-%d).+ (install|upgrade) " /var/log/dpkg.log |
+        cut -d " " -f 3-5'
+      register: result
+      when: upgrade | bool
+
+    - name: Print result
+      debug:
+        msg: "{{ result.stdout_lines }}"
+      when: upgrade | bool
+
+    - name: Remove Hashicorp products from hold
+      become: true
+      shell: "apt-mark unhold nomad consul vault"
+      when:
+        - not update_hashicorp | bool
+        - upgrade | bool
+        - inventory_hostname in groups['nomad']
+
+    - name: Check if Hashicorp products can be updated
+      become: true
+      shell: "apt list --upgradable | grep -E 'nomad|consul|vault'"
+      register: result
+      failed_when: false
+      changed_when: false
+      when:
+        - check_hashicorp | bool
+        - inventory_hostname in groups['nomad']
+
+    - name: Print update result
+      debug:
+        msg: "{{ result.stdout_lines }}"
+      when: check_hashicorp | bool
+
+    - name: Install packages
+      become: true
+      apt:
+        name: "{{ package_list }}"
+        state: latest
+        update_cache: yes
+      when: package_list | length > 0
