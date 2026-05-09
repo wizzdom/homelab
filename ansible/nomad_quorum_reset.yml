@@ -1,0 +1,46 @@
+---
+- name: Nomad Quorum Reset
+  hosts: nomad
+  become: true
+  vars:
+    nomad_data_dir: "/opt/nomad/data"
+    bootstrap_count: 3
+
+  tasks:
+    - name: Stop Nomad service
+      systemd:
+        name: nomad
+        state: stopped
+
+    - name: Clean Raft consensus data
+      file:
+        path: "{{ nomad_data_dir }}/server/raft"
+        state: absent
+
+    - name: Ensure Raft directory exists with correct permissions
+      file:
+        path: "{{ nomad_data_dir }}/server/raft"
+        state: directory
+        owner: nomad
+        group: nomad
+        mode: '0700'
+
+    - name: Verify Nomad Configuration bootstrap_expect
+      lineinfile:
+        path: /etc/nomad.d/nomad.hcl
+        regexp: 'bootstrap_expect\s*='
+        line: "  bootstrap_expect = {{ bootstrap_count }}"
+        state: present
+      notify: Restart Nomad
+
+    - name: Force Start Nomad
+      systemd:
+        name: nomad
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Restart Nomad
+      systemd:
+        name: nomad
+        state: restarted

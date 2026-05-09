@@ -1,0 +1,23 @@
+---
+- name: Clear Consul Data dir
+  hosts: nomad
+  become: true
+  tasks:
+    - name: Remove directory
+      ansible.builtin.file:
+        path: /opt/consul
+        state: absent
+
+    - name: Create new directory with correct perms
+      ansible.builtin.file:
+        path: /opt/consul
+        state: directory
+        owner: consul
+        group: consul
+        mode: '0700'
+
+    - name: restart consul
+      ansible.builtin.systemd_service:
+        name: consul
+        daemon_reload: true
+        state: restarted
