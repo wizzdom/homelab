@@ -1,0 +1,56 @@
+datacenter = "{{ nomad_datacenter_name }}"
+name      = "{{ inventory_hostname }}"
+region    = "lan"
+
+bind_addr = "0.0.0.0"
+
+data_dir   = "/opt/nomad/data"
+
+{%- if server | default(false) %}
+server {
+  enabled          = true
+  bootstrap_expect = 1
+}
+{%- endif %}
+
+advertise {
+  http = "{{ ansible_facts['default_ipv4']['address'] }}"
+  rpc  = "{{ ansible_facts['default_ipv4']['address'] }}"
+  serf = "{{ ansible_facts['default_ipv4']['address'] }}"
+}
+
+telemetry {
+  collection_interval        = "1s"
+  disable_hostname           = true
+  prometheus_metrics         = true
+  publish_allocation_metrics = true
+  publish_node_metrics       = true
+}
+
+{% if client | default(false) %}
+
+client {
+  enabled = true
+  # for minecraft modpack zip bombing allowance
+  artifact {
+    decompression_size_limit       = "0"
+    decompression_file_count_limit = 12000
+  }
+  bridge_network_hairpin_mode = true
+}
+
+plugin "raw_exec" {
+  config {
+    enabled = true
+  }
+}
+
+plugin "docker" {
+  config {
+    allow_privileged = true
+    volumes {
+      enabled = true
+    }
+  }
+}
+{%- endif %}

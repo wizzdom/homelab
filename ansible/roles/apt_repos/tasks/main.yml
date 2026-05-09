@@ -1,0 +1,47 @@
+---
+- name: Remove conflicting Docker packages
+  ansible.builtin.apt:
+    name: "{{ docker_conflicting_packages }}"
+    state: absent
+
+- name: Install base dependencies
+  ansible.builtin.apt:
+    name: [ca-certificates, curl]
+    state: present
+    update_cache: true
+
+- name: Ensure keyring directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download repository keys
+  ansible.builtin.get_url:
+    url: "{{ item.key_url }}"
+    dest: "/etc/apt/keyrings/{{ item.name }}.asc"
+    mode: '0644'
+  loop: "{{ external_repos }}"
+
+- name: Configure repositories
+  ansible.builtin.copy:
+    dest: "/etc/apt/sources.list.d/{{ item.name }}.sources"
+    content: |
+      Types: deb
+      URIs: {{ item.url }}
+      Suites: {{ ansible_facts['distribution_release'] }}
+      Components: {{ item.components }}
+      Signed-By: /etc/apt/keyrings/{{ item.name }}.asc
+    mode: '0644'
+  loop: "{{ external_repos }}"
+  register: repo_config
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+  when: repo_config.changed
+
+- name: Install packages
+  ansible.builtin.apt:
+    name: "{{ docker_official_packages + hashicorp_packages }}"
+    state: present

@@ -1,0 +1,35 @@
+---
+- name: Print all available facts
+  hosts: nomad
+  tasks:
+    - name: Print all available facts
+      ansible.builtin.debug:
+        var: ansible_facts
+
+- name: Add official apt repos
+  hosts: nomad
+  become: true
+  roles:
+    - role: apt_repos
+
+- name: Consigure Hashicorp
+  hosts: nomad
+  become: true
+  roles:
+    - role: hashicorp
+
+- name: Mount TrueNAS NFS shares
+  hosts: all
+  become: true
+  vars:
+    truenas_ip: "truenas.lan"
+    nfs_shares:
+      - {src: "/mnt/storage/media", path: "/mnt/media"}
+      - {src: "/mnt/storage/backups", path: "/mnt/backups"}
+      - {src: "/mnt/storage/storage", path: "/mnt/storage"}
+  roles:
+    - role: mount_nfs
+  handlers:
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: true

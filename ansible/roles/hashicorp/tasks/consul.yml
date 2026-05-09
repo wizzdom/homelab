@@ -1,0 +1,29 @@
+---
+- name: Create consul configuration file
+  ansible.builtin.template:
+    src: "templates/consul.hcl.j2"
+    dest: "/etc/consul.d/consul.hcl"
+  notify:
+    - restart consul
+
+- name: Copy consul systemd unit file
+  become: true
+  template:
+    src: consul.service
+    dest: /etc/systemd/system/consul.service
+    owner: root
+    group: root
+    mode: 644
+
+- name: Reload systemd daemon
+  become: true
+  systemd:
+    daemon_reload: true
+
+- name: Enable service Consul
+  ansible.builtin.systemd_service:
+    name: consul
+    enabled: true
+    state: started
+  notify:
+    - restart consul

@@ -1,0 +1,30 @@
+---
+- name: Create nomad configuration file
+  ansible.builtin.template:
+    src: "templates/nomad.hcl.j2"
+    dest: "/etc/nomad.d/nomad.hcl"
+  notify:
+    - restart nomad
+
+- name: Copy nomad systemd unit file
+  become: true
+  template:
+    src: nomad.service
+    dest: /etc/systemd/system/nomad.service
+    owner: root
+    group: root
+    mode: 644
+
+- name: Reload systemd daemon
+  become: true
+  systemd:
+    daemon_reload: true
+
+- name: Enable service Nomad
+  ansible.builtin.systemd_service:
+    name: nomad
+    enabled: true
+    daemon-reload: true
+    state: started
+  notify:
+    - restart nomad

@@ -1,0 +1,31 @@
+---
+- name: Install nfs-common
+  ansible.builtin.apt:
+    name: nfs-common
+    state: present
+    update_cache: yes
+
+- name: Temporarily unmount to fix local listener perms
+  ansible.posix.mount:
+    path: "{{ item.path }}"
+    state: unmounted
+  loop: "{{ nfs_shares }}"
+
+- name: Ensure mount points exist with correct ownership
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: 1000
+    group: 1000
+    mode: "0775"
+  loop: "{{ nfs_shares }}"
+
+- name: Configure fstab and systemd automounts
+  ansible.posix.mount:
+    src: "{{ truenas_ip }}:{{ item.src }}"
+    path: "{{ item.path }}"
+    fstype: nfs4
+    opts: "rw,relatime,hard,timeo=600,retrans=2,_netdev,nofail,x-systemd.automount"
+    state: mounted
+  loop: "{{ nfs_shares }}"
+  notify: Reload systemd

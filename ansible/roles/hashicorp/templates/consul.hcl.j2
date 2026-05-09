@@ -1,0 +1,63 @@
+log_level     = "INFO"
+datacenter = "{{ nomad_datacenter_name }}"
+data_dir      = "/opt/consul"
+encrypt = "{{ consul_generated_encrypt_key }}"
+# verify_incoming = true
+# verify_outgoing = true
+# verify_server_hostname = true
+node_name     = "{{ inventory_hostname }}"
+# bind_addr     = "{{ ansible_default_ipv4.address }}"
+bind_addr = "{% raw %}{{ GetPrivateInterfaces | include \"network\" \"192.168.1.0/24\" | attr \"address\" }}{% endraw %}"
+client_addr = "0.0.0.0"
+
+auto_encrypt {
+  allow_tls = true
+}
+
+# This ugly line is to get the hostnames of the other consul servers, excluding the current host.
+# Consul cannot join itself, so we need to exclude the current host.
+retry_join = ["{{ groups.nomad|difference([inventory_hostname]) | join('", "')}}"]
+bootstrap_expect = {{ nomad_server_bootstrap_expect }}
+
+acl {
+  enabled = false
+  default_policy = "allow"
+  enable_token_persistence = true
+}
+
+performance {
+  raft_multiplier = 1
+}
+
+ui_config {
+  enabled = true
+}
+
+telemetry {
+  prometheus_retention_time = "360h"
+}
+
+{% if server | default(false) %}
+server        = true
+
+connect {
+  enabled = true
+}
+{%- endif %}
+
+
+# service {
+#   id      = "consul-dns"
+#   name    = "consul-dns"
+#   tags    = ["dns", "consul-client"]
+#   address = "{{ ansible_default_ipv4.address }}"
+#   port    = 8600
+#   check {
+#     id       = "dns"
+#     name     = "Consul DNS TCP on port 8600"
+#     tcp      = "{{ ansible_default_ipv4.address }}:8600"
+#     interval = "10s"
+#     timeout  = "1s"
+#   }
+# }
+

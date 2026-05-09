@@ -1,0 +1,28 @@
+docker_conflicting_packages:
+  - docker.io
+  - docker-doc
+  - docker-compose
+  - podman-docker
+  - containerd
+  - runc
+
+docker_official_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+hashicorp_packages:
+  - nomad
+  - consul
+
+external_repos:
+  - name: docker
+    url: "https://download.docker.com/linux/debian"
+    key_url: "https://download.docker.com/linux/debian/gpg"
+    components: "stable"
+  - name: hashicorp
+    url: "https://apt.releases.hashicorp.com"
+    key_url: "https://apt.releases.hashicorp.com/gpg"
+    components: "main"

@@ -1,0 +1,24 @@
+---
+- name: Ensure Hashicorp packages are installed
+  ansible.builtin.apt:
+    name: "{{ hashicorp_packages }}"
+    state: present
+
+- name: Set list of other server IPv4 addresses
+  set_fact:
+    server_ipv4: >-
+      {{
+        play_hosts
+        | difference([inventory_hostname])
+        | map('extract', hostvars)
+        | selectattr('server', 'defined')
+        | selectattr('server', 'equalto', true)
+        | map(attribute='ansible_host')
+        | list
+      }}
+
+- name: Configure Nomad
+  include_tasks: nomad.yml
+
+- name: Configure Consul
+  include_tasks: consul.yml
