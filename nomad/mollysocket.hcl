@@ -50,7 +50,7 @@ job "mollysocket" {
         change_mode = "restart"
         data        = <<EOH
 MOLLY_DB="/data/mollysocket.db" # sqlite smh...
-MOLLY_ALLOWED_ENDPOINTS=["{{ env "NOMAD_META_domain" }}"]
+MOLLY_ALLOWED_ENDPOINTS=["{{ env "NOMAD_META_domain" }}", "ntfy.sh"]
 MOLLY_ALLOWED_UUIDS=["*"]
 MOLLY_VAPID_PRIVKEY="{{ key "mollysocket/vapid/privkey" }}"
 MOLLY_HOST=0.0.0.0
