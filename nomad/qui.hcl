@@ -82,7 +82,7 @@ EOH
       }
 
       resources {
-        cpu    = 300
+        cpu    = 150
         memory = 200
       }
 
