@@ -32,6 +32,12 @@ job "jellyfin" {
       ]
     }
 
+    ephemeral_disk { # cache
+      size    = 3000 # MB
+      migrate = true
+      sticky  = true # try to reschedule on same node
+    }
+
     task "jellyfin" {
       driver = "docker"
 
@@ -56,6 +62,15 @@ job "jellyfin" {
           "/mnt/media/media:/data/media",
           "/etc/localtime:/etc/localtime:ro",
         ]
+
+        mount {
+          type     = "tmpfs"
+          target   = "/transcode"
+          readonly = false
+          tmpfs_options {
+            size = 4294967296 # 4GB
+          }
+        }
       }
 
       env {
@@ -64,6 +79,7 @@ job "jellyfin" {
         TZ                          = "Europe/Dublin"
         SUP_GROUP_IDS               = "109,44"
         JELLYFIN_PublishedServerUrl = "https://${NOMAD_META_domain}"
+        DOCKER_MODS                 = "linuxserver/mods:jellyfin-opencl-intel"
         # TODO: add jellyfin envvars for postgres once supported
       }
 
