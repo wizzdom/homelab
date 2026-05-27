@@ -1,20 +1,8 @@
 job "caddy" {
   datacenters = ["dc1"]
-  type        = "service"
-
-  constraint {
-    operator = "distinct_hosts"
-    value    = "true"
-  }
-
-  # constraint {
-  #   attribute = "${attr.unique.hostname}"
-  #   value     = "morpheus"
-  # }
+  type        = "system"
 
   group "caddy" {
-    count = 3
-    # count = 1 # using 1 for testing
 
     network {
       mode = "host"
