@@ -13,11 +13,12 @@ job "keepalived" {
 
     # service {
     #   name = "keepalived"
+    #   task = "keepalived"
     #
     #   check {
     #     type     = "script"
     #     command  = "/bin/sh"
-    #     args     = ["-c", "ip addr show | grep -q '192.168.1.50'"]
+    #     args     = ["-c", "ip addr show | grep -q ${NOMAD_META_virtual_ipaddress}"]
     #     interval = "10s"
     #     timeout  = "2s"
     #   }
@@ -37,8 +38,9 @@ job "keepalived" {
 
 
       config {
-        image   = "osixia/keepalived:2.3.4"
-        cap_add = ["NET_ADMIN", "NET_RAW", "NET_BROADCAST"]
+        image        = "osixia/keepalived:2.3.4"
+        network_mode = "host"
+        # cap_add      = ["NET_ADMIN", "NET_RAW", "NET_BROADCAST"]
 
         args = [
           "--",
@@ -63,7 +65,7 @@ global_defs {
 
 vrrp_instance VI_1 {
   state BACKUP
-  interface enp1s0 # TODO: template this based on network interface with default route
+  interface {{ sockaddr (printf "GetAllInterfaces | include \"address\" \"%s\" | attr \"name\"" (env "attr.unique.network.ip-address")) }}
   virtual_router_id 51
   priority 150
   advert_int 1
