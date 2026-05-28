@@ -40,7 +40,7 @@ job "keepalived" {
       config {
         image        = "osixia/keepalived:2.3.4"
         network_mode = "host"
-        # cap_add      = ["NET_ADMIN", "NET_RAW", "NET_BROADCAST"]
+        cap_add      = ["NET_ADMIN", "NET_RAW", "NET_BROADCAST"]
 
         args = [
           "--",
