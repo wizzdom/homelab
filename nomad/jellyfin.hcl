@@ -52,8 +52,10 @@ job "jellyfin" {
 
         devices = [
           {
-            host_path      = "/dev/dri"
-            container_path = "/dev/dri"
+            host_path = "/dev/dri/card0"
+          },
+          {
+            host_path = "/dev/dri/renderD128"
           }
         ]
 
@@ -77,7 +79,7 @@ job "jellyfin" {
         PUID                        = "1000"
         PGID                        = "1000"
         TZ                          = "Europe/Dublin"
-        SUP_GROUP_IDS               = "109,44"
+        SUP_GROUP_IDS               = "109,44,992"
         JELLYFIN_PublishedServerUrl = "https://${NOMAD_META_domain}"
         DOCKER_MODS                 = "linuxserver/mods:jellyfin-opencl-intel"
         # TODO: add jellyfin envvars for postgres once supported
