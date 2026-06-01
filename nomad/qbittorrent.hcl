@@ -36,6 +36,14 @@ job "qbittorrent" {
     task "qbittorrent" {
       driver = "docker"
 
+      action "remove-lockfile" {
+        command = "rm"
+        args = [
+          "-f",
+          "/config/qBittorrent/lockfile"
+        ]
+      }
+
       config {
         image = "lscr.io/linuxserver/qbittorrent:latest"
         ports = ["http", "bittorrent"]
