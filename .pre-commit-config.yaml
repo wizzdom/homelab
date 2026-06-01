@@ -1,0 +1,16 @@
+repos:
+  - repo: local
+    hooks:
+      - id: nomad-fmt
+        name: nomad fmt
+        entry: nomad fmt
+        language: system
+        files: ^nomad/.*\.(nomad|nomad\.hcl|hcl)$
+        pass_filenames: true
+
+      - id: nomad-validate
+        name: nomad job validate
+        entry: bash -c 'for file in "$@"; do nomad job validate "$file" || exit 1; done' --
+        language: system
+        files: ^nomad/.*\.(nomad|nomad\.hcl|hcl)$
+        pass_filenames: true
