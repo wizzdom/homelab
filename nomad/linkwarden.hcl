@@ -41,8 +41,8 @@ job "linkwarden" {
       }
 
       resources {
-        cpu    = 1000
-        memory = 2048
+        cpu    = 500
+        memory = 1024
       }
 
       template {
@@ -69,6 +69,11 @@ MEILI_MASTER_KEY={{ key "linkwarden/search/key" }}
 NEXT_PUBLIC_EMAIL_PROVIDER=true
 EMAIL_FROM={{ key "linkwarden/smtp/from" }}
 EMAIL_SERVER=smtps://{{ key "linkwarden/smtp/user" | urlquery }}:{{ key "linkwarden/smtp/password" | urlquery }}@{{ key "linkwarden/smtp/host" }}:{{ key "linkwarden/smtp/port" }}
+
+
+CUSTOM_OPENAI_BASE_URL=https://openrouter.ai/api/v1
+OPENAI_MODEL={{ key "linkwarden/openrouter/model" }}
+OPENAI_API_KEY={{ key "linkwarden/openrouter/api/key" }}
 EOH
       }
     }
