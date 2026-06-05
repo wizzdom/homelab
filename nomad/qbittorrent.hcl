@@ -24,7 +24,12 @@ job "qbittorrent" {
       name = "qbittorrent"
       port = "http"
 
-      # TODO: add health check
+      check {
+        type     = "http"
+        path     = "/"
+        interval = "10s"
+        timeout  = "2s"
+      }
 
       tags = [
         "caddy.enable=true",
