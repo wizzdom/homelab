@@ -72,7 +72,7 @@ job "wireguard" {
 
       resources {
         cpu    = 100
-        memory = 96
+        memory = 256
       }
     }
   }
