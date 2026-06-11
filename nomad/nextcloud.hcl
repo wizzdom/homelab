@@ -22,6 +22,9 @@ job "nextcloud" {
       port "fpm" {
         to = 9000
       }
+      port "valkey" {
+        to = 6379
+      }
     }
 
     service {
@@ -31,6 +34,9 @@ job "nextcloud" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.nextcloud.rule=Host(`${NOMAD_META_domain}`)",
+        "gatus.enable=true",
+        "gatus.group=productivity",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 
@@ -53,6 +59,7 @@ job "nextcloud" {
           # PHP optimizations go brrr
           "local/zzz-fpm.conf:/usr/local/etc/php-fpm.d/zzz-custom.conf:ro",
           "local/nextcloud.ini:/usr/local/etc/php/conf.d/zzz-nextcloud.ini:ro",
+          "local/apcu.config.php:/var/www/html/config/apcu.config.php:ro",
         ]
       }
 
@@ -113,10 +120,10 @@ EOF
         data        = <<EOF
 [www]
 pm = dynamic
-pm.max_children = 30
-pm.start_servers = 5
-pm.min_spare_servers = 3
-pm.max_spare_servers = 8
+pm.max_children = 20
+pm.start_servers = 8
+pm.min_spare_servers = 5
+pm.max_spare_servers = 10
 pm.max_requests = 500
 request_terminate_timeout = 300s
 EOF
@@ -128,13 +135,13 @@ EOF
 ; OPcache
 opcache.enable=1
 opcache.memory_consumption=256
-opcache.interned_strings_buffer=16
-opcache.max_accelerated_files=10000
+opcache.interned_strings_buffer=32
+opcache.max_accelerated_files=100000
 opcache.save_comments=1
 opcache.revalidate_freq=60
 
 opcache.jit=1255
-opcache.jit_buffer_size=8M
+opcache.jit_buffer_size=256M
 
 apc.enable_cli=1
 apc.shm_size=128M
@@ -156,9 +163,19 @@ realpath_cache_ttl  = 600
 EOF
       }
 
+      template {
+        destination = "local/apcu.config.php"
+        data        = <<EOF
+<?php
+$CONFIG = [
+  'memcache.local' => '\OC\Memcache\APCu',
+];
+EOF
+      }
+
       resources {
         cpu    = 500
-        memory = 1500
+        memory = 3072
       }
     }
     task "nginx" {
@@ -234,6 +251,7 @@ http {
     upstream php-handler {
         zone backends 64k;
         server {{ env "NOMAD_ADDR_fpm" }};
+        keepalive 16;
     }
 
     server {
@@ -248,9 +266,11 @@ http {
         add_header Strict-Transport-Security "max-age=15768000; includeSubDomains; preload;" always;
 
         # set max upload size and increase upload timeout:
-        client_max_body_size 512M;
+        client_max_body_size 10G;
         client_body_timeout 300s;
-        fastcgi_buffers 64 4K;
+        fastcgi_buffer_size 128k;
+        fastcgi_buffers 4 256k;
+        fastcgi_busy_buffers_size 256k;
 
         # The settings allows you to optimize the HTTP2 bandwidth.
         # See https://blog.cloudflare.com/delivering-http-2-upload-speed-improvements/
@@ -347,6 +367,7 @@ http {
             fastcgi_param modHeadersAvailable true;         # Avoid sending the security headers twice
             fastcgi_param front_controller_active true;     # Enable pretty urls
             fastcgi_pass php-handler;
+            fastcgi_keep_conn on;
 
             fastcgi_intercept_errors on;
             fastcgi_request_buffering on;                   # Required as PHP-FPM does not support chunked transfer encoding and requires a valid ContentLength header.
@@ -386,6 +407,11 @@ http {
 }
 EOH
       }
+      resources {
+        cpu    = 300
+        memory = 256
+      }
+
     }
 
     task "cron" {
@@ -408,6 +434,8 @@ EOH
           "/mnt/storage/nomad/${NOMAD_JOB_NAME}/config:/var/www/html/config",
           "/mnt/storage/nomad/${NOMAD_JOB_NAME}/custom_apps:/var/www/html/custom_apps",
           "/mnt/storage/nomad/${NOMAD_JOB_NAME}/themes:/var/www/html/themes",
+
+          "local/nextcloud.ini:/usr/local/etc/php/conf.d/zzz-nextcloud.ini:ro",
         ]
       }
 
@@ -425,6 +453,21 @@ REDIS_HOST_PORT={{ .Port }}
 {{- end }}
 EOF
       }
+
+      template {
+        destination = "local/nextcloud.ini"
+        data        = <<EOF
+opcache.enable=1
+opcache.enable_cli=1
+opcache.memory_consumption=128
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=100000
+opcache.save_comments=1
+memory_limit = 1024M
+max_execution_time = 3600
+EOF
+      }
+
 
       resources {
         cpu    = 200
@@ -499,19 +542,6 @@ EOH
         memory = 64
       }
     }
-  }
-
-  group "valkey" {
-    ephemeral_disk {
-      size    = 300 # MB
-      migrate = true
-    }
-
-    network {
-      port "valkey" {
-        to = 6379
-      }
-    }
 
     service {
       name = "nextcloud-valkey"
@@ -542,12 +572,8 @@ EOH
       template {
         destination = "local/valkey.conf"
         data        = <<EOH
-# save every 60 seconds if at least 100 keys have changed
-save 60 100
-
-dir {{ env "NOMAD_ALLOC_DIR" }}/data
 maxmemory 150mb
-maxmemory-policy allkeys-lru
+maxmemory-policy noeviction
 
 EOH
       }
@@ -559,4 +585,5 @@ EOH
     }
   }
 }
+
 
