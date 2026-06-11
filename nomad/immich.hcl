@@ -115,15 +115,18 @@ EOH
         image      = "ghcr.io/immich-app/immich-server:release"
         ports      = ["worker"]
         force_pull = true
+        group_add  = ["109", "44", "992"] # render, video, media
 
         volumes = [
           "/mnt/photos/${NOMAD_JOB_NAME}/data:/data",
         ]
 
-        devices = [ # map Intel QuickSync to container, allowing for hardware encoding
+        devices = [ # map Intel iGPU to container, allowing for Intel QuickSync hardware encoding
           {
-            host_path      = "/dev/dri"
-            container_path = "/dev/dri"
+            host_path = "/dev/dri/card0"
+          },
+          {
+            host_path = "/dev/dri/renderD128"
           }
         ]
       }
@@ -162,9 +165,6 @@ EOH
   // --- Immich Machine Learning ---
   group "machine-learning" {
     count = "1"
-    constraint {
-      distinct_hosts = true
-    }
 
     network {
       port "ml" {
@@ -182,21 +182,34 @@ EOH
       name = "immich-ml"
       port = "ml"
 
-      check {
-        type     = "http"
-        path     = "/ping"
-        interval = "5s"
-        timeout  = "2s"
-      }
+      # check {
+      #   type     = "http"
+      #   path     = "/ping"
+      #   interval = "5s"
+      #   timeout  = "2s"
+      # }
     }
 
-    task "server" {
+    task "ml-worker" {
       driver = "docker"
 
       config {
         image      = "ghcr.io/immich-app/immich-machine-learning:release"
         force_pull = true
         ports      = ["ml"]
+        group_add  = ["109", "44", "992"] # render, video, media
+        devices = [                       # map Intel iGPU to container, allowing for Intel QuickSync hardware encoding
+          {
+            host_path = "/dev/dri/card0"
+          },
+          {
+            host_path = "/dev/dri/renderD128"
+          },
+          {
+            host_path          = "/dev/bus/usb"
+            cgroup_permissions = "rwm"
+          }
+        ]
       }
 
       env {
@@ -211,7 +224,7 @@ EOH
         MACHINE_LEARNING_REQUEST_THREADS = 4
         # add your models from Settings -> Machine Learning here
         MACHINE_LEARNING_PRELOAD__CLIP               = "ViT-B-16-SigLIP-256__webli"
-        MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION = "buffalo_l"
+        MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION = "antelopev2"
       }
 
       resources {
