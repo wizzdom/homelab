@@ -74,10 +74,13 @@ PAPERLESS_ADMIN_PASSWORD    = "{{ key "paperless/admin/password" }}"
 
 PAPERLESS_EMAIL_PARSE_DEFAULT_LAYOUT=1
 
-# TODO: spin these up:
-# PAPERLESS_TIKA_ENABLED=<bool>
-# PAPERLESS_TIKA_ENDPOINT=<url>
-# PAPERLESS_TIKA_GOTENBERG_ENDPOINT=<url>
+PAPERLESS_TIKA_ENABLED= "true"
+{{- range service "tika" }}
+PAPERLESS_TIKA_ENDPOINT = "http://{{ .Address }}:{{ .Port }}"
+{{- end }}
+{{- range service "gotenberg" }}
+PAPERLESS_TIKA_GOTENBERG_ENDPOINT = "http://{{ .Address }}:{{ .Port }}"
+{{- end }}
 
 CELERY_WORKER_CONCURRENCY=2 # save my RAM
 EOH
