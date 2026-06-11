@@ -14,10 +14,12 @@ job "lldap" {
         to = 17170
       }
       port "ldap" {
-        to = 3890
+        to     = 3890
+        static = 3890
       }
       port "ldaps" {
-        to = 6360
+        to     = 6360
+        static = 6360
       }
     }
 
@@ -45,7 +47,7 @@ job "lldap" {
 
     service {
       name = "lldap-ldaps"
-      port = "ldap"
+      port = "ldaps"
     }
 
     task "lldap" {
