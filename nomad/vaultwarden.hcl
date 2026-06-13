@@ -68,6 +68,9 @@ PUSH_ENABLED=false
 PUSH_INSTALLATION_ID={{ key "vaultwarden/push/id" }}
 PUSH_INSTALLATION_KEY={{ key "vaultwarden/push/key" }}
 
+YUBICO_CLIENT_ID={{ key "vaultwarden/yubico/client_id" }}
+YUBICO_SECRET_KEY={{ key "vaultwarden/yubico/secret_key" }}
+
 # This is not the actual token, but a hash of it. Vaultwarden does not like the actual token.
 ADMIN_TOKEN={{ key "vaultwarden/admin/token" }}
 SMTP_HOST={{ key "vaultwarden/smtp/host" }}
@@ -78,9 +81,6 @@ SMTP_USERNAME={{ key "vaultwarden/smtp/username" }}
 SMTP_PASSWORD={{ key "vaultwarden/smtp/password" }}
 EOF
       }
-      # These yubico variables are not necessary for yubikey support, only to verify the keys with yubico.
-      #YUBICO_CLIENT_ID={{ key "vaultwarden/yubico/client_id" }}
-      #YUBICO_SECRET_KEY={{ key "vaultwarden/yubico/secret_key" }}
 
       resources {
         cpu    = 500
