@@ -32,7 +32,7 @@ job "bazarr" {
 
         "gatus.enable=true",
         "gatus.group=media",
-        "gatus.url=https://${NOMAD_META_domain}/",
+        "gatus.url=https://${NOMAD_META_domain}/health",
       ]
     }
 
@@ -40,7 +40,7 @@ job "bazarr" {
       driver = "docker"
 
       config {
-        image = "lscr.io/linuxserver/bazarr:latest"
+        image = "lscr.io/linuxserver/bazarr:development"
         ports = ["http"]
 
         volumes = [
@@ -68,7 +68,7 @@ EOH
 
       resources {
         cpu    = 300
-        memory = 256
+        memory = 512
       }
     }
 
