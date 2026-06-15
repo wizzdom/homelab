@@ -35,7 +35,7 @@ job "caddy" {
       tags = [
         "gatus.enable=true",
         "gatus.group=ingress",
-        "gatus.url=icmp://caddy.service.consul/",
+        "gatus.url=http://caddy.service.consul:${NOMAD_PORT_admin}/_healthz",
       ]
 
     }
@@ -66,7 +66,7 @@ EOF
         change_signal = "SIGUSR1"
         data          = <<EOF
 {
-  admin 0.0.0.0:{{ env "NOMAD_PORT_admin" }} # not exposed publically
+  admin 0.0.0.0:{{ env "NOMAD_PORT_admin" }} # not exposed publicly
   email {$CADDY_EMAIL}
 
   metrics
@@ -93,6 +93,13 @@ EOF
 # HTTP -> HTTPS redirect
 :80 {
   redir https://{host}{uri} permanent
+}
+
+# healthcheck
+:{{ env "NOMAD_PORT_admin" }} {
+  route /_health* {
+        respond "OK"
+    }
 }
 
 # grab domains from KV for cert gen
