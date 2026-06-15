@@ -10,9 +10,7 @@ job "gatus" {
     count = 1
 
     network {
-      port "http" {
-        to = 8080
-      }
+      port "http" {}
     }
 
     service {
@@ -37,7 +35,6 @@ job "gatus" {
         ports = ["http"]
 
         volumes = [
-          "/storage/nomad/${NOMAD_JOB_NAME}/${NOMAD_TASK_NAME}:/config",
           "local/config.yaml:/config/config.yaml",
         ]
       }
@@ -46,14 +43,31 @@ job "gatus" {
         destination = "local/config.yaml"
         change_mode = "noop"
         data        = <<EOH
+web:
+  address: "0.0.0.0"
+  port: {{ env "NOMAD_PORT_http" }}
+
 ui:
+  title: "Homelab Status | Gatus"
+  description: "Status page for selfhosted services"
+  dashboard-heading: "Homelab Status"
+  logo: ""
   link: "https://{{ env "NOMAD_META_domain" }}"
+
+  buttons:
+    - name: "GitHub"
+      link: "https://github.com/wizzdom/homelab"
+
   dark-mode: on
 
 storage:
   type: postgres
   path: 'postgres://{{ key "gatus/db/user" | urlquery }}:{{ key "gatus/db/password" | urlquery }}@master.postgres.service.consul:5432/{{ key "gatus/db/name" }}?sslmode=disable'
 
+connectivity:
+  checker:
+    target: 1.1.1.1:53
+    interval: 60s
 
 endpoints:
 {{- range services -}}
@@ -70,8 +84,8 @@ endpoints:
     {{- end }}
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
-      - "[CERTIFICATE_EXPIRATION] > 48h"
+      - "[STATUS] == any(200, 401, 404, 405, 429)"
+      # - "[CERTIFICATE_EXPIRATION] > 48h"
 
   {{- end }}
 {{- end -}}
