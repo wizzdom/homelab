@@ -25,6 +25,10 @@ job "hedgedoc" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.md.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=productivity",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 
@@ -145,4 +149,3 @@ EOH
     }
   }
 }
-

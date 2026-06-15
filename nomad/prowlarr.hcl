@@ -27,6 +27,10 @@ job "prowlarr" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.prowl.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=false",
+        "gatus.group=media",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 

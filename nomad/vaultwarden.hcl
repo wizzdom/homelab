@@ -37,6 +37,10 @@ job "vaultwarden" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.vaultwarden.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=productivity",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 
@@ -64,7 +68,7 @@ INVITATIONS_ALLOWED=true
 
 ENABLE_WEBSOCKET=true
 
-PUSH_ENABLED=false
+PUSH_ENABLED=true
 PUSH_INSTALLATION_ID={{ key "vaultwarden/push/id" }}
 PUSH_INSTALLATION_KEY={{ key "vaultwarden/push/key" }}
 

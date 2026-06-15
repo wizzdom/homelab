@@ -22,6 +22,10 @@ job "pgadmin" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.pgadmin.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=administration",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 

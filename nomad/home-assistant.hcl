@@ -29,6 +29,10 @@ job "home-assistant" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.ha.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=tools",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 

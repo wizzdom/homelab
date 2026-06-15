@@ -19,9 +19,20 @@ job "bazarr" {
       name = "bazarr"
       port = "http"
 
+      check {
+        type     = "http"
+        path     = "/health"
+        interval = "10s"
+        timeout  = "2s"
+      }
+
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.bazarr.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=media",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 

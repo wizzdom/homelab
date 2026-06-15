@@ -29,6 +29,10 @@ job "shlink" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.shlink-api.rule=Host(`${NOMAD_META_apidomain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=tools",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 
@@ -188,4 +192,3 @@ SHLINK_SERVER_FORWARD_CREDENTIALS=false
     }
   }
 }
-

@@ -27,6 +27,10 @@ job "profilarr" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.profilarr.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=false",
+        "gatus.group=media",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 

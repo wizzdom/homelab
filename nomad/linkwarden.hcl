@@ -25,6 +25,10 @@ job "linkwarden" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.link.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=productivity",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 

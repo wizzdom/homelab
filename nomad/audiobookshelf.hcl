@@ -27,6 +27,10 @@ job "audiobookshelf" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.audiobookshelf.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=media",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 

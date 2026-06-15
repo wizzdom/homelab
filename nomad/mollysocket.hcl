@@ -27,6 +27,10 @@ job "mollysocket" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.mollysocket.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=tools",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 
@@ -50,7 +54,7 @@ job "mollysocket" {
         change_mode = "restart"
         data        = <<EOH
 MOLLY_DB="/data/mollysocket.db" # sqlite smh...
-MOLLY_ALLOWED_ENDPOINTS=["{{ env "NOMAD_META_domain" }}", "ntfy.sh"]
+MOLLY_ALLOWED_ENDPOINTS=["*"]
 MOLLY_ALLOWED_UUIDS=["*"]
 MOLLY_VAPID_PRIVKEY="{{ key "mollysocket/vapid/privkey" }}"
 MOLLY_HOST=0.0.0.0

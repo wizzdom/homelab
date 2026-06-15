@@ -29,6 +29,10 @@ job "jellyfin" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.jellyfin.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=media",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 
@@ -43,7 +47,7 @@ job "jellyfin" {
 
       resources {
         cpu    = 1000
-        memory = 1024
+        memory = 2048
       }
 
       config {

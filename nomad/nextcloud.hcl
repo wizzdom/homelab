@@ -16,6 +16,7 @@ job "nextcloud" {
     }
 
     network {
+      mode = "bridge"
       port "http" {
         to = 80
       }
@@ -585,5 +586,3 @@ EOH
     }
   }
 }
-
-

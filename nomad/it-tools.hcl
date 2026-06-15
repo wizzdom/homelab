@@ -4,6 +4,7 @@ job "it-tools" {
 
   meta {
     domain = "tools.wizzdom.xyz"
+    src    = "https://github.com/CorentinTh/it-tools"
   }
 
   group "web" {
@@ -29,6 +30,10 @@ job "it-tools" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.it-tools.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=tools",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 
@@ -47,4 +52,3 @@ job "it-tools" {
     }
   }
 }
-

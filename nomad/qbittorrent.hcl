@@ -34,6 +34,10 @@ job "qbittorrent" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.qbittorrent.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=false",
+        "gatus.group=media",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 
@@ -41,6 +45,7 @@ job "qbittorrent" {
     task "qbittorrent" {
       driver = "docker"
 
+      # trigger with: nomad action -job=qbittorrent -group=qbittorrent -task=qbittorrent remove-lockfile
       action "remove-lockfile" {
         command = "rm"
         args = [

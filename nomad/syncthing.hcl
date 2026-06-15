@@ -38,6 +38,10 @@ job "syncthing" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.syncthing.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=tools",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 

@@ -27,23 +27,19 @@ job "qui" {
 
       tags = [
         "caddy.enable=true",
-        "caddy.http.routers.qui.rule=Host(`${NOMAD_META_domain}`)"
+        "caddy.http.routers.qui.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=media",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 
     task "qui" {
       driver = "docker"
 
-      # NOTE: testing...
-      template {
-        destination = "secrets/image.env"
-        env         = true
-        change_mode = "restart"
-        data        = "IMAGE_TAG={{ if nomadVarExists \"nomad/jobs/qui\" }}{{ with nomadVar \"nomad/jobs/qui\" }}{{ if .image }}{{ .image.Value }}{{ else }}latest{{ end }}{{ end }}{{ else }}latest{{ end }}"
-      }
-
       config {
-        image = "ghcr.io/autobrr/qui:${IMAGE_TAG}"
+        image = "ghcr.io/autobrr/qui:latest"
         ports = ["http"]
 
         volumes = [

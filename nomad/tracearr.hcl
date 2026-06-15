@@ -30,6 +30,10 @@ job "tracearr" {
       tags = [
         "caddy.enable=true",
         "caddy.http.routers.tracearr.rule=Host(`${NOMAD_META_domain}`)",
+
+        "gatus.enable=true",
+        "gatus.group=monitoring",
+        "gatus.url=https://${NOMAD_META_domain}/",
       ]
     }
 
