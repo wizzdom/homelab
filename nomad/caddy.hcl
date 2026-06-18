@@ -35,9 +35,16 @@ job "caddy" {
       tags = [
         "gatus.enable=true",
         "gatus.group=ingress",
-        "gatus.url=http://caddy.service.consul:${NOMAD_PORT_admin}/_healthz",
+        "gatus.url=http://caddy.service.consul:${NOMAD_PORT_admin}/_health",
       ]
 
+    }
+
+    update {
+      max_parallel     = 1
+      min_healthy_time = "15s"
+      healthy_deadline = "2m"
+      auto_revert      = true
     }
 
     task "caddy" {
@@ -90,6 +97,16 @@ EOF
   }
 }
 
+(securityHeaders) {
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options    "nosniff"
+    X-Frame-Options           "SAMEORIGIN"
+    Referrer-Policy           "strict-origin-when-cross-origin"
+    -Server
+  }
+}
+
 # HTTP -> HTTPS redirect
 :80 {
   redir https://{host}{uri} permanent
@@ -97,7 +114,7 @@ EOF
 
 # healthcheck
 :{{ env "NOMAD_PORT_admin" }} {
-  route /_health* {
+  route /_health {
         respond "OK"
     }
 }
@@ -127,16 +144,27 @@ EOF
 
   {{- if and $enabled $host }}
 {{ $host }} {
+  import tlsConfig
+  import securityHeaders
+
   reverse_proxy {
-    {{- range service $service }}
-    to {{ .Address }}:{{ .Port }}
-    {{- end }}
-    lb_policy round_robin
-    lb_try_duration 5s
-    fail_duration 10s
-    max_fails 3
+    dynamic srv {
+      name      {{ $service }}.service.consul
+      refresh   30s
+      dial_timeout        2s
+      dial_fallback_delay -1s
+    }
+
+    lb_policy       round_robin
+    lb_try_duration 10s
+    lb_try_interval 250ms
+
+    fail_duration    10s
+    max_fails        3
+    unhealthy_status 500 502 503 504
   }
 }
+
   {{- end }}
 {{- end }}
 EOF
@@ -146,6 +174,13 @@ EOF
         cpu    = 200
         memory = 256
       }
+    }
+
+    restart {
+      attempts = 3
+      interval = "5m"
+      delay    = "15s"
+      mode     = "fail"
     }
   }
 }
