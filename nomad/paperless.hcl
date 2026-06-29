@@ -55,7 +55,7 @@ job "paperless" {
         env         = true
         data        = <<EOH
 {{- range service "paperless-valkey" }}
-PAPERLESS_REDIS             = "redis://{{ .Address }}:{{ .Port }}"
+PAPERLESS_REDIS             = "redis://{{ .Address }}:{{ .Port }}/0"
 {{- end }}
 
 PAPERLESS_DBENGINE          = "postgresql"
@@ -92,7 +92,7 @@ EOH
 
       resources {
         cpu    = 800
-        memory = 800
+        memory = 2048
       }
     }
 
