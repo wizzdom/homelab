@@ -19,14 +19,20 @@ job "ddclient" {
         destination = "local/ddclient.conf"
         change_mode = "noop"
         data        = <<EOH
-daemon=300 # check every 300 seconds
+daemon=300
+syslog=yes
 ssl=yes
-use=web
+pid=/var/run/ddclient.pid
 
-protocol=cloudflare, zone={{ key "ddclient/cloudflare/zone" }}, ttl=1, \
-login={{ key "ddclient/cloudflare/api/login" }}, password={{ key "cloudflare/api/key" }}
+usev4=webv4
+webv4=api.ipify.org
+
+# Cloudflare Configuration
+protocol=cloudflare
+zone={{ key "ddclient/cloudflare/zone" }}
+login=token
+password={{ key "ddclient/cloudflare/api/token" }}
 {{ key "ddclient/cloudflare/domains" }}
-
 EOH
       }
       resources {
